@@ -1,6 +1,5 @@
 import copy
 import random
-from pygame import time
 
 
 class Guesser:
@@ -52,7 +51,6 @@ class Guesser:
                 min_length = current_length
                 self.guess = letter
             string += "."
-            timer.tick(20)
         print(" " * 100, end="\r")
 
     def ask_letter(self):
@@ -164,8 +162,6 @@ class Guesser:
 
         open("english_words.txt", "w").write("\n".join(wordset))
 
-
-timer = time.Clock()
 
 #Guesser.prune_database()
 
