@@ -3,55 +3,45 @@ import random
 
 
 class Guesser:
-    letters = list("etarionshdluwmfcgypbkvjxqz")
+    letters = list("etarionshdluwmfcgypbkvjxqz")  # letters in order of frequency
 
-    defaults = list("eaaaaeeeeeeiiiiiiiiioooee")
+    defaults = list("eaaaaeeeeeeiiiiiiiiioooee")  # first guess for different length words (hardcoded for efficency)
 
     @classmethod
-    def ask_length(cls):
+    def ask_length(cls):  # take input of and check validity of word length
         while True:
             word_len = input("What is the length of your word? ")
             try:
-                return int(word_len)
+                return int(word_len)  # if integer (5)
             except:
-                if set(word_len) <= set("-"):
+                if set(word_len) <= set("-"):  # if string of blanks (------)
                     return len(word_len)
-                elif set(word_len) <= set(cls.letters):
+                elif set(word_len) <= set(cls.letters):  # if word (triggers autoplay)
                     return word_len
                 print("That isn't a valid word length...")
 
-    @classmethod
-    def get_all_words(cls, length):
-        cls.words = list()
-        words = open("english_words.txt", "r").read().split("\n \n")
-        if words[length - 1]:
-            return words[length - 1].split("\n")
-        else:
-            return list()
+    def __init__(self, length):  # creates a guesser-type with a given word length
+        self.letters = copy.copy(self.letters)
 
-    def __init__(self, length, words):
         self.word_len = length
-        self.cipher = "-" * length
+        self.create_word_list(self.word_len)
+
+        self.cipher = "-" * self.word_len
         self.errors = 0
-        self.words = words
-        if length <= len(self.defaults):
-            self.guess = self.defaults[length - 1]
+
+        self.check_words()  # check for immediate success
+
+        if self.word_len <= len(self.defaults):  # use hardcoded first guess if possible
+            self.guess = self.defaults[self.word_len - 1]
         else:
             self.decide_letter()
-        self.check_words()
 
-    def decide_letter(self):
-        min_length = len(self.words)
-        self.guess = self.letters[0]
-        string = "Thinking"
-        for letter in self.letters:
-            print(string, end="\r")
-            current_length = len(self.get_words(letter, "-" * self.word_len))
-            if current_length < min_length and current_length != 0:
-                min_length = current_length
-                self.guess = letter
-            string += "."
-        print(" " * 100, end="\r")
+    def create_word_list(self, length):  # gets the list of words with the given length (hardcoded for efficency)
+        words = open("english_words.txt", "r").read().split("\n \n")
+        if words[length - 1]:
+            self.words = words[length - 1].split("\n")
+        else:
+            self.words = list()
 
     def ask_letter(self):
         accurate = False
@@ -120,18 +110,38 @@ class Guesser:
             print("I don't know your word...")
             return True
 
+    def decide_letter(self):
+        min_length = len(self.words)
+        self.guess = self.letters[0]
+        string = "Thinking"
+        for letter in self.letters:
+            print(string, end="\r")
+            current_length = len(self.get_words(letter, "-" * self.word_len))
+            if current_length < min_length and current_length != 0:
+                min_length = current_length
+                self.guess = letter
+            string += "."
+        print(" " * 100, end="\r")
+
     def update(self, word):
         if word is None:
             self.ask_letter()
         else:
             self.build_letter()
+
+        self.update_cipher()
         if "=" not in self.indices:
             self.errors += 1
-        self.update_cipher()
+
         print("\nCurrent word: {}\nErrors: {}".format(self.cipher, self.errors))
         words = self.get_words(self.guess, self.indices)
-        if len(words) in (0, 1):
+
+        if MAX_PRINTED_WORDS:
+            if len(words) <= MAX_PRINTED_WORDS:
+                print("Current possible words: {}".format(", ".join(words)))
+        elif len(words) in (0, 1):
             print("Previous possible words: {}".format(", ".join(self.words)))
+
         self.words = words
         if self.check_words():
             return True
@@ -139,13 +149,13 @@ class Guesser:
 
     @staticmethod
     def prune_database():
-        letters = list("abcdefghijklmnopqrstuvwxyz")
+        allowed_letters = list("abcdefghijklmnopqrstuvwxyz")
 
         words = open("english_words.txt", "r").read().split("\n")
 
         valid_words = list()
         for word in words:
-            if set(word) <= set(letters):
+            if set(word) <= set(allowed_letters):
                 valid_words.append(word.lower())
 
         valid_words = list(set(valid_words))
@@ -165,6 +175,8 @@ class Guesser:
 
 #Guesser.prune_database()
 
+MAX_PRINTED_WORDS = 5
+
 while True:
     length = Guesser.ask_length()
     if type(length) != int:
@@ -172,8 +184,7 @@ while True:
     else:
         word = None
 
-    words = Guesser.get_all_words(length)
-    guesser = Guesser(length, words)
+    guesser = Guesser(length)
 
     done = False
 
