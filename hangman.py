@@ -232,18 +232,22 @@ class Guesser:
         results = open(OUTPUT_FILE, "r").read().split("\n")
         num_of_words = 0
         total_errors = 0
+        total_guesses = 0
         for result in results:
             if len(result.split("|")[0]) == word_len:
                 num_of_words += 1
                 total_errors += int(result.split("|")[1])
+                total_guesses += len(result.split("|")[2])
         if num_of_words:
-            print("Of {} {}-letter words, average error is {}".format(num_of_words, word_len, round(total_errors / num_of_words, 4)))
+            average_errors = round(total_errors / num_of_words, 4)
+            average_guesses = round(total_guesses / num_of_words, 4)
+            print("Of {} {}-letter words, average error is {} with {} guesses".format(num_of_words, word_len, average_errors, average_guesses))
         else:
             print("No {}-letter words in the database".format(word_len))
 
 
 USE_RANDOM_WORD = True
-word_index = 47370
+word_index = 180831
 LETTER_CHARACTERS = ("-", "=")
 MAX_PRINTED_WORDS = 8
 PRINT_RESULTS = False
@@ -256,9 +260,9 @@ PERCENTAGE = True
 #Guesser.prune_database()  # sort words file into readable form
 #quit()
 
-#for i in range(45):
-#    Guesser.get_average(i + 1)
-#quit()
+for i in range(45):
+    Guesser.get_average(i + 1)
+quit()
 
 while True:  # multiple games loop
     if USE_RANDOM_WORD:
