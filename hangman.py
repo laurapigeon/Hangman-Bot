@@ -6,7 +6,7 @@ import random
 class Guesser:
     letters = list("etarionshdluwmfcgypbkvjxqz")  # letters in order of frequency
 
-    defaults = list("eaaaaeeeeeeiiiiiiiiioooee")  # first guess for different length words (hardcoded for efficency)
+    defaults = list("aoaaaeeeeeeiiiiiiiiioooee")  # first guess for different length words (hardcoded for efficency)
 
     @classmethod
     def ask_length(cls):  # take input and check validity of word length
@@ -245,9 +245,43 @@ class Guesser:
         else:
             print("No {}-letter words in the database".format(word_len))
 
+    @staticmethod
+    def get_max(word_len):
+        results = open(OUTPUT_FILE, "r").read().split("\n")
+        max_value = 0
+        max_word = list()
+        for result in results:
+            if len(result.split("|")[0]) == word_len:
+                if int(result.split("|")[1]) > max_value:
+                    max_value = int(result.split("|")[1])
+                    max_word = [result.split("|")[0]]
+                elif int(result.split("|")[1]) == max_value:
+                    max_word.append(result.split("|")[0])
+        if max_word:
+            print("The maximum error {} letter word ({} errors) is {}".format(word_len, max_value, ", ".join(max_word)))
+        else:
+            print("No {}-letter words in the database".format(word_len))
+
+    @staticmethod
+    def get_min(word_len):
+        results = open(OUTPUT_FILE, "r").read().split("\n")
+        min_value = 100000000
+        min_word = list()
+        for result in results:
+            if len(result.split("|")[0]) == word_len:
+                if len(result.split("|")[2]) < min_value:
+                    min_value = len(result.split("|")[2])
+                    min_word = [result.split("|")[0]]
+                elif len(result.split("|")[2]) == min_value:
+                    min_word.append(result.split("|")[0])
+        if min_word:
+            print("The minimum guess {} letter word ({} guesses) is {}".format(word_len, min_value, ", ".join(min_word)))
+        else:
+            print("No {}-letter words in the database".format(word_len))
+
 
 USE_RANDOM_WORD = True
-word_index = 180831
+word_index = 0
 LETTER_CHARACTERS = ("-", "=")
 MAX_PRINTED_WORDS = 8
 PRINT_RESULTS = False
@@ -260,9 +294,9 @@ PERCENTAGE = True
 #Guesser.prune_database()  # sort words file into readable form
 #quit()
 
-for i in range(45):
-    Guesser.get_average(i + 1)
-quit()
+#for i in range(45):
+#    Guesser.get_min(i + 1)
+#quit()
 
 while True:  # multiple games loop
     if USE_RANDOM_WORD:
