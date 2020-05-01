@@ -140,7 +140,7 @@ class Guesser:
         return words
 
     def check_words(self, new_words=None):  # checks if wordset says anything about the word
-        if new_words:
+        if new_words is not None:
             if PRINT_RESULTS:
                 if MAX_PRINTED_WORDS:  # printing current/previous words
                     if len(new_words) not in (0, 1) and len(new_words) <= MAX_PRINTED_WORDS:
@@ -357,7 +357,7 @@ WORDS_FILE = "english_words.txt"
 PRUNE_DATABASE = False
 
 OUTPUT_FILE = "results.txt"
-GET_DATA = True
+GET_DATA = False
 RECORD_RESULTS = False
 
 PRINT_RESULTS = True
