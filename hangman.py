@@ -8,8 +8,9 @@ class Guesser:
 
     defaults = list("aoaaaeeeeeeiiiiiiiiioooee")  # first guess for different length words (hardcoded for efficency)
 
+    #region get word
     @classmethod
-    def ask_length(cls):  # take input and check validity of word length
+    def ask_word(cls):  # take input and check validity of word length
         while True:
             word_len = input("What is the length of your word? (enter word for auto): ")
             try:
@@ -23,6 +24,18 @@ class Guesser:
 
     @staticmethod
     def get_random_word():
+        word_sets = open(WORDS_FILE, "r").read().split("\n \n")
+        words = list()
+        for word_set in word_sets:
+            for word in word_set.split("\n"):
+                words.append(word)
+        word = words[random.randint(0, len(words) - 1)]
+        if PRINT_RESULTS:
+            print(word)
+        return word
+
+    @staticmethod
+    def get_indexed_word():
         global word_index
         word_sets = open(WORDS_FILE, "r").read().split("\n \n")
         words = list()
@@ -34,6 +47,7 @@ class Guesser:
             print(word)
         word_index += 1
         return word
+    #endregion
 
     def __init__(self, length):  # creates a guesser-type with a given word length
         self.letters = copy.copy(self.letters)  # class attribute is mutable by default
@@ -47,10 +61,13 @@ class Guesser:
 
         self.check_words()  # check for immediate success
 
-        if self.word_len <= len(self.defaults):  # use hardcoded first guess if possible
-            self.guess = self.defaults[self.word_len - 1]
+        if ASK_LETTER:
+            self.ask_letter()
         else:
-            self.decide_letter()
+            if self.word_len <= len(self.defaults):  # use hardcoded first guess if possible
+                self.guess = self.defaults[self.word_len - 1]
+            else:
+                self.decide_letter()
 
     def create_word_list(self, length):  # gets the list of words with the given length (hardcoded for efficency)
         words = open(WORDS_FILE, "r").read().split("\n \n")
@@ -59,6 +76,7 @@ class Guesser:
         else:
             return list()
 
+    #region get indices
     def ask_indices(self):  # take input and check validity of letter answer
         accurate = False
         while not accurate:  # repeat request until success
@@ -95,6 +113,7 @@ class Guesser:
         for character in word:
             self.indices += LETTER_CHARACTERS[character == self.guess]
         self.letters.remove(self.guess)
+    #endregion
 
     def update_cipher(self):
         cipher = list(self.cipher)
@@ -120,7 +139,26 @@ class Guesser:
 
         return words
 
-    def check_words(self):
+    def check_words(self, new_words=None):  # checks if wordset says anything about the word
+        if new_words:
+            if PRINT_RESULTS:
+                if MAX_PRINTED_WORDS:  # printing current/previous words
+                    if len(new_words) not in (0, 1) and len(new_words) <= MAX_PRINTED_WORDS:
+                        print("Your word might be {}".format(", ".join(new_words)))
+                    elif (not PERCENTAGE) and len(new_words) > 1:
+                        print("There are now {} possible words".format(len(new_words)))
+                    if PERCENTAGE:
+                        if len(self.words):
+                            print("I am {}% more sure of your word".format(round(100 * ((1 - len(new_words) / len(self.words)) % 1), 2)))
+
+                    if len(new_words) in (0, 1) and len(self.words) > MAX_PRINTED_WORDS:
+                        print("Previous possible words: {}".format(", ".join(self.words)))
+
+                elif len(new_words) in (0, 1):
+                    print("Previous possible words: {}".format(", ".join(self.words)))
+
+            self.words = new_words
+
         if len(self.words) in (0, 1):
             if PRINT_RESULTS:
                 if len(self.words) == 1:  # if word list reduced to single word
@@ -130,6 +168,22 @@ class Guesser:
             return True  # found
         else:
             return False  # not found
+
+    #region get letter
+    def ask_letter(self):  # get letter from user to ask
+        accurate = False
+        while not accurate:
+
+            response = input("Pick a character: ")
+            if len(response) == 1:
+                if response.lower() in self.letters:
+                    accurate = True
+                else:
+                    print("Please give a letter in the alphabet which hasn't been guessed...")
+            else:
+                print("Please only give a single character...")
+
+        self.guess = response.lower()
 
     def decide_letter(self):  # decide optimal letter to ask
         min_length = len(self.words)
@@ -156,6 +210,7 @@ class Guesser:
 
         if PRINT_RESULTS:
             print(" " * 100, end="\r")
+    #endregion
 
     def update(self, word):
         if RECORD_RESULTS:
@@ -174,27 +229,13 @@ class Guesser:
             print("\nCurrent word: {}\nErrors: {}".format(self.cipher, self.errors))
         new_words = self.get_words(self.guess, self.indices)  # get new words given indices
 
-        if PRINT_RESULTS:
-            if MAX_PRINTED_WORDS:  # printing current/previous words
-                if len(new_words) not in (0, 1) and len(new_words) <= MAX_PRINTED_WORDS:
-                    print("Your word might be {}".format(", ".join(new_words)))
-                elif PERCENTAGE:
-                    if len(self.words):
-                        print("I am {}% more sure of your word".format(round(100 * ((1 - len(new_words) / len(self.words)) % 1), 2)))
-                elif len(new_words) > 1:
-                    print("There are now {} possible words".format(len(new_words)))
-
-                if len(new_words) in (0, 1) and len(self.words) > MAX_PRINTED_WORDS:
-                    print("Previous possible words: {}".format(", ".join(self.words)))
-
-            elif len(new_words) in (0, 1):
-                print("Previous possible words: {}".format(", ".join(self.words)))
-
-        self.words = new_words
-        found = self.check_words()
+        found = self.check_words(new_words)
         if found:  # break from loop
             return True
-        self.decide_letter()  # gets self.guess
+        if ASK_LETTER:
+            self.ask_letter()  # asks for self.guess
+        else:
+            self.decide_letter()  # gets self.guess
 
     def record_results(self):
         #previous_results = open(OUTPUT_FILE, "r").read().split("\n")
@@ -227,6 +268,7 @@ class Guesser:
 
         open(WORDS_FILE, "w").write("\n".join(wordset))
 
+    #region get data
     @staticmethod
     def get_average(word_len):
         results = open(OUTPUT_FILE, "r").read().split("\n")
@@ -246,7 +288,7 @@ class Guesser:
             print("No {}-letter words in the database".format(word_len))
 
     @staticmethod
-    def get_max(word_len):
+    def get_max_error(word_len):
         results = open(OUTPUT_FILE, "r").read().split("\n")
         max_value = 0
         max_word = list()
@@ -263,9 +305,26 @@ class Guesser:
             print("No {}-letter words in the database".format(word_len))
 
     @staticmethod
-    def get_min(word_len):
+    def get_max_guess(word_len):
         results = open(OUTPUT_FILE, "r").read().split("\n")
-        min_value = 100000000
+        max_value = 0
+        max_word = list()
+        for result in results:
+            if len(result.split("|")[0]) == word_len:
+                if len(result.split("|")[2]) > max_value:
+                    max_value = len(result.split("|")[2])
+                    max_word = [result.split("|")[0]]
+                elif len(result.split("|")[2]) == max_value:
+                    max_word.append(result.split("|")[0])
+        if max_word:
+            print("The maximum guess {} letter word ({} guesses) is {}".format(word_len, max_value, ", ".join(max_word)))
+        else:
+            print("No {}-letter words in the database".format(word_len))
+
+    @staticmethod
+    def get_min_guess(word_len):
+        results = open(OUTPUT_FILE, "r").read().split("\n")
+        min_value = 26
         min_word = list()
         for result in results:
             if len(result.split("|")[0]) == word_len:
@@ -278,31 +337,51 @@ class Guesser:
             print("The minimum guess {} letter word ({} guesses) is {}".format(word_len, min_value, ", ".join(min_word)))
         else:
             print("No {}-letter words in the database".format(word_len))
+    #endregion
 
 
-USE_RANDOM_WORD = True
-word_index = 0
+USE_RANDOM_WORD = False
+USE_INDEX_WORD = False
+INITIAL_WORD_INDEX = 0
+
 LETTER_CHARACTERS = ("-", "=")
+
 MAX_PRINTED_WORDS = 8
-PRINT_RESULTS = False
-WAIT_TIME = 0.05  # seconds between "thinking" dots
-WORDS_FILE = "english_words.txt"
-OUTPUT_FILE = "results.txt"
-RECORD_RESULTS = True
 PERCENTAGE = True
 
-#Guesser.prune_database()  # sort words file into readable form
-#quit()
+WAIT_TIME = 0.05  # seconds between "thinking" dots
 
-#for i in range(45):
-#    Guesser.get_min(i + 1)
-#quit()
+ASK_LETTER = True
+
+WORDS_FILE = "english_words.txt"
+PRUNE_DATABASE = False
+
+OUTPUT_FILE = "results.txt"
+GET_DATA = True
+RECORD_RESULTS = False
+
+PRINT_RESULTS = True
+
+if PRUNE_DATABASE:
+    Guesser.prune_database()  # sort words file into readable form
+    quit()
+
+if GET_DATA:
+    for i in range(45):
+        #Guesser.get_average(i + 1)
+        Guesser.get_max_error(i + 1)
+        #Guesser.get_max_guess(i + 1)
+        #Guesser.get_min_guess(i + 1)
+        print("")
+    quit()
+
+word_index = INITIAL_WORD_INDEX
 
 while True:  # multiple games loop
     if USE_RANDOM_WORD:
         length = Guesser.get_random_word()
     else:
-        length = Guesser.ask_length()
+        length = Guesser.ask_word()
 
     if type(length) != int:  # if auto
         word, length = length, len(length)
