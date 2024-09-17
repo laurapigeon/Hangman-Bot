@@ -1,48 +1,61 @@
-def decompose_string(list):
-    string = list[-1]
-    for i, _ in enumerate(string):
-        if i > 0 and string[:i+1] in words:
-            if i == len(string)-1:
-                return list, "done"
-            else:
-                list = list[:-1]
-                list.append(string[:i+1])
-                list.append(string[i+1:])
-                list, task = decompose_string(list)
-                if task == "done":
-                    return list, "done"
-                
-    if len(list) == 1:
-        return list, "done"
-    
-    list = list[:-1]
-    list[-1] = list[-1]+string
-    return list, "fail"
+"""
+creates a list of words which are made of component words,
+and lets a user vet them into a second list
+"""
+
+def decompose_string(pieces):
+    "recursively divides up a word into component words"
+    piece = pieces[-1] # take final piece of word
+    for i, _ in enumerate(piece): # go through its first letters
+        if i > 0 and piece[:i+1] in words: # if letters form a word
+            if i == len(piece)-1: # if letters are the word
+                return pieces, "done" # gg exit recursion
+
+            pieces = pieces[:-1] # remove final piece
+            pieces.append(piece[:i+1]) # add word part of piece
+            pieces.append(piece[i+1:]) # add new final piece
+            pieces, task = decompose_string(pieces) # recursively continue
+            if task == "done": # if recursive node wants to leave
+                return pieces, "done" # gg exit recursion
+
+    if len(pieces) == 1: # nothing was found
+        return pieces, "done"
+
+    pieces = pieces[:-1] # remove final piece
+    pieces[-1] = pieces[-1]+piece # re-attach end
+    return pieces, "fail" # nothing was found
 
 
-WORDS_FILE = "english_sorted_common_words.txt"
-OUTPUT_FILE = "output.txt"
-LIST_FILE = "contractions_list.txt"
+INPUT_WORDS_FILE = "test_input.txt"
+PIECE_WORDS_FILE = "test_input.txt"
+OUTPUT_FILE = "test_output.txt"
+VETTED_OUTPUT_FILE = "vetted_contractions.txt"
 GENERATE_WORDS = True
 
 if GENERATE_WORDS:
-    word_sets = open(WORDS_FILE, "r").read().split("\n\n")
+    with open(INPUT_WORDS_FILE, "r", encoding="utf8") as file:
+        word_sets = file.read().split("\n\n")
     sorted_words = [word for word_set in word_sets for word in word_set.split("\n")]
     words = set(sorted_words)
 
-    open(OUTPUT_FILE, "w")
+    with open(OUTPUT_FILE, "w", encoding="utf8"):
+        pass
+
     for check_word in sorted_words:
         result, _ = decompose_string([check_word])
         if len(result) > 1:
             #print(" ".join(result))
-            open(OUTPUT_FILE, "a").write(" ".join(result)+"\n")
+            with open(OUTPUT_FILE, "a", encoding="utf8") as file:
+                file.write(" ".join(result)+"\n")
 
 else:
-    contraction_words = list()
-    word_sets = open(OUTPUT_FILE, "r").read().split("\n\n")
+    contraction_words = []
+    with open(OUTPUT_FILE, "r", encoding="utf8") as file:
+        word_sets = file.read().split("\n\n")
     words = [word for word_set in word_sets for word in word_set.split("\n")]
     for check_word in words:
         keep = input(check_word)
         if keep != "":
             print("stored!")
-            open(LIST_FILE, "a").write(check_word+"\n")
+            with open(VETTED_OUTPUT_FILE, "a", encoding="utf8") as file:
+                file.write(check_word+"\n")

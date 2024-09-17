@@ -1,9 +1,10 @@
 
 import copy
-bubsList = ["sheepy", "poly", "platy", 
-            "meepy", "roly", "splaty", 
-            "tipi", "boly", "ratty", 
-            "beepy", "raratty", "ratsy"]
+bubsList = ["sheepy", "poly", "platy",
+            "meepy", "roly", "splaty",
+            "tipi", "boly", "ratty",
+            "beepy", "moly", "raratty", "ratsy",
+            "geepy", "woly", "naty"]
 
 for bub1 in bubsList[::-1]:
     newBubsList = copy.copy(bubsList)
