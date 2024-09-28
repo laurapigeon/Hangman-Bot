@@ -1,3 +1,4 @@
+"prints every pair of bubs"
 
 import copy
 bubsList = ["sheepy", "poly", "platy",
@@ -14,4 +15,3 @@ for bub1 in bubsList[::-1]:
         print(bub1, bub2)
 
     bubsList.remove(bub1)
-

@@ -1,3 +1,5 @@
+"plays a game of hangman against the user"
+
 import copy
 import time
 import random
@@ -6,7 +8,8 @@ import random
 class Guesser:
     letters = list("etarionshdluwmfcgypbkvjxqz")  # letters in order of frequency
 
-    defaults = list("aoaaaeeeeeeiiiiiiiiioooee")  # first guess for different length words (hardcoded for efficency)
+    # first guess for different length words (hardcoded for efficency)
+    defaults = list("aoaaaeeeeeeiiiiiiiiioooee")
 
     #region get word
     @classmethod
